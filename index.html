@@ -1,0 +1,1665 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Below the Surface — Facies Classification</title>
+
+<style>
+:root {
+    --bg: #171d1c;
+    --gold: #e6b66d;
+    --teal: #79c5b2;
+    --coral: #e58b6c;
+    --cream: #f8f0df;
+}
+
+* {
+    box-sizing: border-box;
+}
+
+html, body {
+    width: 100%;
+    height: 100%;
+    margin: 0;
+    overflow: hidden;
+    background: var(--bg);
+    font-family: Arial, Helvetica, sans-serif;
+}
+
+button {
+    font: inherit;
+}
+
+.stage {
+    width: 100vw;
+    height: 100vh;
+    height: 100dvh;
+    position: relative;
+    overflow: hidden;
+    background:
+        radial-gradient(ellipse at 75% 45%, #465b4c 0%, transparent 55%),
+        linear-gradient(145deg, #202c27, #121b19);
+}
+
+/* FULL-SCREEN VISUAL */
+
+.visual {
+    position: absolute;
+    inset: 0;
+    overflow: hidden;
+    background:
+        radial-gradient(ellipse at 50% 50%, #526c55 0%, #354d40 48%, #1b2925 100%);
+    perspective: 900px;
+}
+
+.world {
+    position: absolute;
+    inset: 0;
+    transform-style: preserve-3d;
+    transition: transform 2s cubic-bezier(.2,.7,.2,1);
+}
+
+.world.surface-view {
+    transform: scale(1);
+}
+
+.world.drilling-view {
+    transform: scale(1.12) translateY(-2%);
+}
+
+.world.core-view {
+    transform: scale(1.08) translateY(-2%);
+}
+
+.world.logs-view {
+    transform: scale(1.08) translateY(-2%);
+}
+
+.world.gap-view {
+    transform: scale(1.08);
+}
+
+/* SKY AND SURFACE */
+
+.sky {
+    position: absolute;
+    top: 0;
+    height: 37%;
+    width: 100%;
+    background:
+        radial-gradient(ellipse at 68% 18%, #f2c17a66, transparent 38%),
+        radial-gradient(ellipse at 20% 15%, #a9c9a955, transparent 42%),
+        radial-gradient(ellipse at 50% 80%, #d28b5a33, transparent 55%),
+        linear-gradient(180deg, #46675d 0%, #789174 58%, #a28a64 100%);
+    animation: skyGlow 9s ease-in-out infinite alternate;
+}
+
+@keyframes skyGlow {
+    from { filter: brightness(.95) saturate(1); }
+    to { filter: brightness(1.14) saturate(1.13); }
+}
+
+.ground {
+    position: absolute;
+    top: 36%;
+    left: 0;
+    width: 100%;
+    height: 13%;
+    background:
+        radial-gradient(ellipse at 20% 25%, #d9b77b55, transparent 35%),
+        repeating-linear-gradient(95deg, transparent 0 35px, #49332355 36px 39px),
+        linear-gradient(180deg, #c49a63 0%, #9a704b 55%, #76523a 100%);
+    border-top: 5px solid #e0bd7c;
+    box-shadow: 0 8px 24px #0008;
+    z-index: 5;
+}
+
+/* ROCK LAYERS */
+
+.underground {
+    position: absolute;
+    top: 48%;
+    bottom: -5%;
+    left: 0;
+    right: 0;
+    overflow: hidden;
+    background: #66513e;
+}
+
+.layer {
+    position: absolute;
+    left: -5%;
+    width: 110%;
+    height: 27%;
+    border-top: 3px solid #ffffff30;
+    border-bottom: 2px solid #00000045;
+    box-shadow:
+        inset 0 10px 22px #ffffff12,
+        inset 0 -12px 20px #00000020,
+        0 5px 18px #00000015;
+    transition: filter .5s, transform .7s;
+}
+
+.layer.one {
+    top: 0;
+    background:
+        radial-gradient(ellipse at 15% 40%, #eac18a55 0 2px, transparent 3px),
+        radial-gradient(ellipse at 60% 70%, #70472d55 0 2px, transparent 3px),
+        repeating-linear-gradient(4deg, transparent 0 12px, #fff2 13px 15px),
+        linear-gradient(110deg, #d1a06a, #b87e50 55%, #d0a16b);
+    background-size: 37px 31px, 43px 35px, auto, auto;
+    clip-path: polygon(0 0, 100% 0, 100% 88%, 85% 94%, 68% 89%, 51% 100%, 34% 91%, 16% 97%, 0 90%);
+}
+
+.layer.two {
+    top: 22%;
+    background:
+        radial-gradient(ellipse at 30% 45%, #d0d9b344 0 2px, transparent 4px),
+        repeating-linear-gradient(175deg, transparent 0 9px, #ffffff25 10px 12px),
+        linear-gradient(110deg, #83a58a, #638b77 55%, #91a78a);
+    background-size: 45px 35px, auto, auto;
+    clip-path: polygon(0 8%, 16% 0, 34% 7%, 51% 0, 68% 8%, 85% 1%, 100% 7%, 100% 91%, 84% 100%, 66% 92%, 49% 100%, 32% 92%, 15% 100%, 0 92%);
+}
+
+.layer.three {
+    top: 45%;
+    background:
+        radial-gradient(ellipse at 25% 35%, #e1b58b44 0 2px, transparent 4px),
+        repeating-linear-gradient(3deg, transparent 0 16px, #ffffff20 17px 19px),
+        linear-gradient(110deg, #bd8761, #98674d 55%, #c18b61);
+    background-size: 39px 32px, auto, auto;
+    clip-path: polygon(0 5%, 17% 0, 34% 8%, 51% 0, 69% 7%, 85% 0, 100% 6%, 100% 93%, 83% 100%, 67% 92%, 50% 100%, 33% 92%, 16% 100%, 0 92%);
+}
+
+.layer.four {
+    top: 68%;
+    background:
+        radial-gradient(ellipse at 45% 35%, #a8c1b344 0 2px, transparent 4px),
+        repeating-linear-gradient(178deg, transparent 0 8px, #ffffff20 9px 11px),
+        linear-gradient(110deg, #77918d, #526f70 55%, #849b91);
+    background-size: 43px 35px, auto, auto;
+    clip-path: polygon(0 5%, 17% 0, 34% 8%, 51% 0, 68% 8%, 85% 0, 100% 6%, 100% 100%, 0 100%);
+}
+
+/* SUBSURFACE MOVEMENT */
+
+.underground.moving .layer {
+    animation: strataDrift 12s ease-in-out infinite alternate;
+}
+
+.underground.moving .layer.two { animation-delay: -3s; }
+.underground.moving .layer.three { animation-delay: -6s; }
+.underground.moving .layer.four { animation-delay: -9s; }
+
+@keyframes strataDrift {
+    from { transform: translateX(-1.5%); }
+    to { transform: translateX(1.5%); }
+}
+
+/* DRILLING RIG */
+
+.rig {
+    position: absolute;
+    z-index: 7;
+    top: 8%;
+    left: 48%;
+    width: 155px;
+    height: 225px;
+    transform: translateX(-50%);
+    transition: opacity 1s, transform 1s;
+    animation: rigSway 5s ease-in-out infinite alternate;
+}
+
+@keyframes rigSway {
+    from { translate: -2px 0; }
+    to { translate: 2px 0; }
+}
+
+.rig-tower {
+    position: absolute;
+    left: 48px;
+    top: 0;
+    width: 10px;
+    height: 155px;
+    background: #e0bd7c;
+    transform: skew(-8deg);
+    box-shadow: 20px 0 #ae8050;
+}
+
+.rig-cross {
+    position: absolute;
+    top: 20px;
+    left: 18px;
+    width: 112px;
+    height: 7px;
+    background: #e5c68d;
+    transform: rotate(-8deg);
+    box-shadow: 0 35px #c39a63, 0 70px #c39a63;
+}
+
+.rig-base {
+    position: absolute;
+    bottom: 0;
+    left: 10px;
+    width: 135px;
+    height: 20px;
+    background: #526f60;
+    border-top: 4px solid #d4a66a;
+}
+
+.drill-line {
+    position: absolute;
+    left: 76px;
+    top: 145px;
+    width: 4px;
+    height: 210px;
+    background: #e6d5b1;
+    transform-origin: top;
+    animation: drillPulse 2s ease-in-out infinite alternate;
+}
+
+@keyframes drillPulse {
+    from { transform: scaleY(.85); }
+    to { transform: scaleY(1); }
+}
+
+.rig.hidden {
+    opacity: 0;
+    transform: translate(-50%, -60px);
+}
+
+/* WELLBORE */
+
+.well {
+    position: absolute;
+    z-index: 6;
+    top: 36%;
+    left: 48%;
+    width: 23px;
+    height: 70%;
+    transform: translateX(-50%);
+    background: linear-gradient(90deg, #101817, #b8b39a 40%, #161e1c 80%);
+    border-left: 2px solid #e0cfaa;
+    border-right: 2px solid #e0cfaa;
+    box-shadow: 0 0 20px #0009;
+}
+
+.well::after {
+    content: "";
+    position: absolute;
+    left: 8px;
+    top: 0;
+    height: 100%;
+    width: 3px;
+    background: #f0dfb8;
+    opacity: .7;
+}
+
+/* MOVING DOWNHOLE TOOL */
+
+.logging-tool {
+    position: absolute;
+    z-index: 8;
+    left: 48%;
+    top: 40%;
+    width: 33px;
+    height: 65px;
+    border-radius: 7px;
+    transform: translateX(-50%);
+    background: linear-gradient(90deg, #bfc5b4, #fff0c9, #89958a);
+    box-shadow: 0 0 20px #f4e3bd77;
+    animation: toolMove 5s ease-in-out infinite alternate;
+}
+
+.logging-tool::before {
+    content: "";
+    position: absolute;
+    top: -10px;
+    left: 14px;
+    width: 4px;
+    height: 12px;
+    background: #fff0c9;
+}
+
+@keyframes toolMove {
+    from { top: 40%; }
+    to { top: 77%; }
+}
+
+/* CORE EXTRACTION ANIMATION */
+
+.core-extraction {
+    position: absolute;
+    z-index: 12;
+    left: 48%;
+    top: 38%;
+    width: 100px;
+    height: 330px;
+    transform: translateX(-50%);
+    opacity: 0;
+    pointer-events: none;
+}
+
+.core-extraction.visible {
+    opacity: 1;
+}
+
+.extraction-core {
+    position: absolute;
+    left: 22px;
+    top: 0;
+    width: 55px;
+    height: 250px;
+    border-radius: 7px;
+    border: 2px solid #e0c49b;
+    background:
+        linear-gradient(90deg, #654632 0%, #c69a69 18%, #e0bd89 38%, #a77752 70%, #624631 100%);
+    box-shadow:
+        12px 12px 25px #0009,
+        inset 5px 0 9px #ffffff33,
+        inset -8px 0 12px #0006;
+    overflow: hidden;
+    transform: translateY(160px);
+}
+
+.extraction-core::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background:
+        repeating-linear-gradient(
+            0deg,
+            transparent 0 18px,
+            #76513a 19px 23px,
+            #d9b985 24px 28px,
+            transparent 29px 43px,
+            #60776b 44px 49px,
+            transparent 50px 62px
+        );
+    opacity: .95;
+}
+
+.extraction-core::after {
+    content: "";
+    position: absolute;
+    left: 5px;
+    right: 5px;
+    top: 0;
+    height: 100%;
+    background:
+        radial-gradient(ellipse at 30% 12%, #f0d6a055, transparent 30%),
+        radial-gradient(ellipse at 70% 48%, #49362955, transparent 32%),
+        radial-gradient(ellipse at 40% 82%, #e4c28b44, transparent 28%);
+}
+
+.core-extraction.visible .extraction-core {
+    animation: extractCore 2.4s cubic-bezier(.2,.7,.2,1) forwards;
+}
+
+@keyframes extractCore {
+    0% {
+        transform: translateY(160px);
+        opacity: 0;
+    }
+    15% {
+        opacity: 1;
+    }
+    100% {
+        transform: translateY(-210px);
+        opacity: 1;
+    }
+}
+
+/* CORE SAMPLE RESTING HORIZONTALLY */
+
+.core-display {
+    position: absolute;
+    z-index: 13;
+    left: 48%;
+    top: 30%;
+    width: 430px;
+    height: 175px;
+    opacity: 0;
+    transform: translate(-50%, 30px);
+    transition: opacity .8s 2s, transform .8s 2s;
+    pointer-events: none;
+}
+
+.core-display.visible {
+    opacity: 0;
+    transform: translate(-50%, 0);
+}
+
+/* Low sample support */
+
+.core-display::before {
+    content: "";
+    position: absolute;
+    left: 7px;
+    top: 112px;
+    width: 405px;
+    height: 19px;
+    border-radius: 50%;
+    background: linear-gradient(180deg, #d3ad76, #765438 55%, #3e3026);
+    box-shadow: 0 13px 20px #0006;
+    opacity: .9;
+}
+
+.core {
+    position: absolute;
+    left: 15px;
+    top: 42px;
+    width: 385px;
+    height: 57px;
+    border-radius: 30px;
+    border: 2px solid #d7bd96;
+    background:
+        repeating-linear-gradient(
+            90deg,
+            #9c6b49 0 15px,
+            #c99a68 16px 35px,
+            #e0bd8a 36px 49px,
+            #a87652 50px 67px,
+            #6f8877 68px 83px,
+            #9e7555 84px 105px,
+            #c49a6b 106px 126px
+        );
+    box-shadow:
+        12px 14px 24px #0008,
+        inset 0 8px 10px #ffffff30,
+        inset 0 -10px 12px #0005;
+    transform: rotate(-2deg);
+    overflow: hidden;
+    animation: coreRest 5s ease-in-out infinite alternate;
+}
+
+/* Natural-looking mineral texture */
+
+.core::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    background:
+        radial-gradient(ellipse at 15% 35%, #f0d2a277 0 2px, transparent 5px),
+        radial-gradient(ellipse at 38% 65%, #523a2d88 0 2px, transparent 6px),
+        radial-gradient(ellipse at 65% 25%, #f4d6a066 0 2px, transparent 5px),
+        radial-gradient(ellipse at 82% 70%, #4a382d77 0 2px, transparent 6px),
+        linear-gradient(180deg, #ffffff22, transparent 40%, #00000030);
+    background-size: 29px 25px, 37px 29px, 31px 23px, 43px 27px, auto;
+}
+
+.core::after {
+    content: "";
+    position: absolute;
+    right: -2px;
+    top: -1px;
+    width: 57px;
+    height: 57px;
+    border-radius: 50%;
+    border: 3px solid #c9ad83;
+    background:
+        radial-gradient(circle at 40% 35%, #d8b785, #98704e 65%, #49372b);
+    box-shadow: inset 0 0 12px #0007;
+}
+
+@keyframes coreRest {
+    from { transform: rotate(-2deg) translateY(-2px); }
+    to { transform: rotate(-1deg) translateY(2px); }
+}
+
+/* FACIES POPUP */
+
+.facies-popup {
+    position: absolute;
+    z-index: 30;
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%, -50%) scale(.92);
+    width: min(620px, 80vw);
+    padding: 38px 45px;
+    border: 1px solid #e6b66d99;
+    border-radius: 18px;
+    background: rgba(29, 47, 39, .93);
+    box-shadow:
+        0 25px 80px #0009,
+        0 0 35px #e6b66d25,
+        inset 0 1px 0 #ffffff22;
+    text-align: center;
+    opacity: 0;
+    transition: opacity .6s, transform .6s;
+    pointer-events: none;
+    backdrop-filter: blur(12px);
+}
+
+.facies-popup.visible {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(1);
+}
+
+.facies-popup .word {
+    color: var(--gold);
+    font-size: clamp(30px, 4vw, 48px);
+    letter-spacing: 5px;
+    margin-bottom: 18px;
+    font-weight: 500;
+}
+
+.facies-popup .types {
+    color: var(--cream);
+    font-size: clamp(17px, 2vw, 24px);
+    line-height: 1.5;
+    margin-bottom: 24px;
+}
+
+.facies-popup .rock-examples {
+    display: flex;
+    justify-content: center;
+    align-items: flex-start;
+    gap: 22px;
+}
+
+.rock-example {
+    flex: 1;
+    max-width: 105px;
+}
+
+.rock-example .rock-sample {
+    height: 65px;
+    width: 100%;
+    border: 1px solid #ffffff55;
+    border-radius: 7px;
+    box-shadow: 0 8px 18px #0005;
+    margin-bottom: 9px;
+}
+
+.rock-example .rock-name {
+    color: #f1eadb;
+    font-size: 12px;
+    letter-spacing: .5px;
+}
+
+.rock-sample.sandstone {
+    background:
+        radial-gradient(circle at 20% 30%, #f0c98d 0 2px, transparent 3px),
+        radial-gradient(circle at 60% 65%, #79563b 0 2px, transparent 3px),
+        #c18a59;
+    background-size: 17px 16px, 23px 20px, auto;
+}
+
+.rock-sample.siltstone {
+    background:
+        repeating-linear-gradient(0deg, #bd9470 0 7px, #8c6851 8px 13px);
+}
+
+.rock-sample.shale {
+    background:
+        repeating-linear-gradient(0deg, #84999a 0 5px, #405b5e 6px 10px);
+}
+
+.rock-sample.mixed {
+    background:
+        repeating-linear-gradient(0deg, #c18a59 0 18px, #789681 19px 32px, #647d80 33px 44px);
+}
+
+/* WELL LOG VISUAL */
+
+.log-display {
+    position: absolute;
+    z-index: 14;
+    right: 12%;
+    top: 12%;
+    width: 300px;
+    padding: 20px;
+    background: #1c2b25ee;
+    border: 1px solid #ffffff45;
+    border-radius: 12px;
+    opacity: 0;
+    transform: translateY(30px);
+    transition: .8s;
+    pointer-events: none;
+}
+
+.log-display.visible {
+    opacity: 1;
+    transform: translateY(0);
+}
+
+.log-svg {
+    width: 100%;
+    height: 360px;
+    overflow: visible;
+}
+
+.log-trace {
+    fill: none;
+    stroke: #edbd70;
+    stroke-width: 3;
+    stroke-dasharray: 700;
+    stroke-dashoffset: 700;
+}
+
+.log-display.visible .log-trace {
+    animation: drawLog 4s ease forwards;
+}
+
+@keyframes drawLog {
+    to { stroke-dashoffset: 0; }
+}
+
+/* ADDITIONAL LOG CURVES */
+
+.log-curves {
+    position: absolute;
+    z-index: 10;
+    left: 7%;
+    top: 18%;
+    width: 27%;
+    height: 64%;
+    opacity: 0;
+    transform: translateX(-30px);
+    transition: .8s;
+}
+
+.log-curves.visible {
+    opacity: 1;
+    transform: translateX(0);
+}
+
+.log-curves svg {
+    width: 100%;
+    height: 100%;
+}
+
+/* COST VISUAL */
+
+.cost-visual {
+    position: absolute;
+    z-index: 15;
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%, -50%) scale(.85);
+    width: min(650px, 75vw);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 35px;
+    opacity: 0;
+    transition: .8s;
+    pointer-events: none;
+}
+
+.cost-visual.visible {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(1);
+}
+
+.cost-icon {
+    width: 190px;
+    height: 220px;
+    border-radius: 16px;
+    border: 1px solid #ffffff45;
+    background: #2c4538e8;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 20px 50px #0006;
+}
+
+.money-symbol {
+    font-size: 90px;
+    color: var(--gold);
+    font-weight: 300;
+}
+
+.cost-core {
+    width: 45px;
+    height: 150px;
+    border-radius: 25px;
+    border: 3px solid #d9c9a6;
+    background: repeating-linear-gradient(
+        0deg,
+        #c18a59 0 15px,
+        #e0bd8a 16px 25px,
+        #789681 26px 38px,
+        #986b50 39px 50px
+    );
+    box-shadow: 10px 10px 20px #0008;
+    transform: rotate(12deg);
+}
+
+.cost-lines {
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+}
+
+.cost-lines span {
+    display: block;
+    width: 150px;
+    height: 9px;
+    border-radius: 10px;
+    background: #e6b66d;
+    opacity: .9;
+}
+
+.cost-lines span:nth-child(2) {
+    width: 110px;
+    background: #79c5b2;
+}
+
+.cost-lines span:nth-child(3) {
+    width: 130px;
+    background: #e58b6c;
+}
+
+/* MAIN PROBLEM VISUAL */
+
+.problem-visual {
+    position: absolute;
+    z-index: 15;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 7vw;
+    opacity: 0;
+    transition: .8s;
+    pointer-events: none;
+}
+
+.problem-visual.visible {
+    opacity: 1;
+}
+
+.problem-well {
+    width: 150px;
+    height: 390px;
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.problem-well .shaft {
+    height: 100%;
+    width: 25px;
+    background: linear-gradient(90deg, #101817, #b8b39a 40%, #161e1c 80%);
+    border-left: 2px solid #e0cfaa;
+    border-right: 2px solid #e0cfaa;
+}
+
+.problem-well .curves {
+    position: absolute;
+    left: 55px;
+    width: 100px;
+    height: 100%;
+}
+
+.problem-well svg {
+    width: 100%;
+    height: 100%;
+}
+
+.problem-core {
+    width: 60px;
+    height: 270px;
+    border-radius: 25px;
+    border: 3px solid #d9c9a6;
+    background: repeating-linear-gradient(
+        0deg,
+        #c18a59 0 18px,
+        #e0bd8a 19px 26px,
+        #789681 27px 42px,
+        #986b50 43px 54px
+    );
+    box-shadow: 15px 12px 30px #0008;
+    transform: rotate(8deg);
+}
+
+.question-mark {
+    font-size: 100px;
+    color: var(--coral);
+    text-shadow: 0 10px 40px #0009;
+}
+
+/* MACHINE LEARNING VISUAL */
+
+.ml-visual {
+    position: absolute;
+    z-index: 16;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 30px;
+    opacity: 0;
+    transform: scale(.9);
+    transition: .8s;
+    pointer-events: none;
+}
+
+.ml-visual.visible {
+    opacity: 1;
+    transform: scale(1);
+}
+
+.ml-card {
+    width: 190px;
+    height: 230px;
+    border: 1px solid #ffffff45;
+    border-radius: 14px;
+    background: #2c4538e8;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 20px 50px #0006;
+}
+
+.ml-rocks {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+}
+
+.ml-rocks span {
+    display: block;
+    width: 75px;
+    height: 22px;
+    border-radius: 3px;
+}
+
+.ml-rocks span:nth-child(1) { background: #c18a59; }
+.ml-rocks span:nth-child(2) { background: #789681; }
+.ml-rocks span:nth-child(3) { background: #647d80; }
+.ml-rocks span:nth-child(4) { background: #986b50; }
+
+.ml-logs {
+    width: 100px;
+    height: 130px;
+}
+
+.ml-logs svg {
+    width: 100%;
+    height: 100%;
+}
+
+.ml-brain {
+    width: 105px;
+    height: 105px;
+    border-radius: 50%;
+    border: 2px solid var(--teal);
+    background:
+        radial-gradient(circle, #79c5b266 0 8%, transparent 9%),
+        radial-gradient(circle at 30% 35%, #79c5b2 0 4px, transparent 5px),
+        radial-gradient(circle at 70% 35%, #e6b66d 0 4px, transparent 5px),
+        radial-gradient(circle at 50% 70%, #e58b6c 0 4px, transparent 5px),
+        #365849;
+    box-shadow: 0 0 35px #79c5b255;
+    position: relative;
+}
+
+.ml-brain::before,
+.ml-brain::after {
+    content: "";
+    position: absolute;
+    border: 1px solid #79c5b299;
+    border-radius: 50%;
+    inset: 15px;
+}
+
+.ml-brain::after {
+    inset: 30px;
+}
+
+.ml-arrow {
+    font-size: 35px;
+    color: var(--gold);
+}
+
+/* PREDICTION VISUAL */
+
+.prediction-visual {
+    position: absolute;
+    z-index: 16;
+    right: 9%;
+    top: 15%;
+    width: 260px;
+    height: 70%;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    gap: 10px;
+    opacity: 0;
+    transform: translateX(30px);
+    transition: .8s;
+    pointer-events: none;
+}
+
+.prediction-visual.visible {
+    opacity: 1;
+    transform: translateX(0);
+}
+
+.prediction-layer {
+    height: 55px;
+    border-radius: 6px;
+    border: 1px solid #ffffff44;
+    box-shadow: 0 8px 20px #0005;
+}
+
+.prediction-layer:nth-child(1) { background: #c18a59; }
+.prediction-layer:nth-child(2) { background: #789681; }
+.prediction-layer:nth-child(3) { background: #647d80; }
+.prediction-layer:nth-child(4) { background: #986b50; }
+
+/* PARTICLES */
+
+.particles {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    overflow: hidden;
+}
+
+.particle {
+    position: absolute;
+    width: 4px;
+    height: 4px;
+    border-radius: 50%;
+    background: #f2d29b;
+    opacity: .6;
+    animation: floatParticle 9s linear infinite;
+}
+
+.particle:nth-child(1) { left: 18%; top: 20%; animation-delay: -2s; }
+.particle:nth-child(2) { left: 75%; top: 30%; animation-delay: -5s; }
+.particle:nth-child(3) { left: 33%; top: 60%; animation-delay: -1s; }
+.particle:nth-child(4) { left: 85%; top: 75%; animation-delay: -7s; }
+.particle:nth-child(5) { left: 58%; top: 85%; animation-delay: -4s; }
+
+@keyframes floatParticle {
+    0% { transform: translateY(20px); opacity: 0; }
+    20% { opacity: .7; }
+    100% { transform: translateY(-100px); opacity: 0; }
+}
+
+/* FIRST SLIDE ATMOSPHERE */
+
+.opening-glow {
+    position: absolute;
+    z-index: 2;
+    left: 48%;
+    top: 28%;
+    width: 450px;
+    height: 450px;
+    transform: translate(-50%, -50%);
+    border-radius: 50%;
+    background: radial-gradient(circle, #f0ca8a33, transparent 70%);
+    animation: openingGlow 6s ease-in-out infinite alternate;
+    pointer-events: none;
+}
+
+@keyframes openingGlow {
+    from {
+        transform: translate(-50%, -50%) scale(.85);
+        opacity: .5;
+    }
+    to {
+        transform: translate(-50%, -50%) scale(1.2);
+        opacity: 1;
+    }
+}
+
+.drilling-pulse {
+    position: absolute;
+    z-index: 9;
+    left: 48%;
+    top: 46%;
+    width: 75px;
+    height: 75px;
+    border: 2px solid #f0d09a99;
+    border-radius: 50%;
+    transform: translate(-50%, -50%);
+    animation: pulse 3s ease-out infinite;
+    pointer-events: none;
+}
+
+.drilling-pulse::before,
+.drilling-pulse::after {
+    content: "";
+    position: absolute;
+    inset: 12px;
+    border: 1px solid #f0d09a77;
+    border-radius: 50%;
+    animation: pulse 3s ease-out infinite;
+}
+
+.drilling-pulse::after {
+    animation-delay: 1s;
+}
+
+@keyframes pulse {
+    0% {
+        transform: scale(.5);
+        opacity: .8;
+    }
+    100% {
+        transform: scale(3.2);
+        opacity: 0;
+    }
+}
+
+/* MINIMAL NAVIGATION */
+
+.controls {
+    position: absolute;
+    z-index: 40;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 45px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    opacity: 0;
+    transition: opacity .3s;
+}
+
+.stage:hover .controls {
+    opacity: 1;
+}
+
+.control-buttons {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.control-buttons button {
+    width: 42px;
+    height: 32px;
+    border: 1px solid #ffffff40;
+    background: #19251fdd;
+    color: var(--cream);
+    border-radius: 6px;
+    cursor: pointer;
+}
+
+.control-buttons button:hover {
+    background: #ffffff25;
+}
+
+.progress-area {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 3px;
+    display: flex;
+    gap: 2px;
+}
+
+.progress-dot {
+    flex: 1;
+    background: #65766a;
+    transition: background .4s;
+}
+
+.progress-dot.active {
+    background: var(--gold);
+}
+
+/* RESPONSIVE */
+
+@media(max-width: 700px) {
+    .rig {
+        left: 50%;
+        transform: translateX(-50%) scale(.8);
+        transform-origin: top center;
+    }
+
+    .well, .logging-tool {
+        left: 50%;
+    }
+
+    .core-display {
+        left: 50%;
+        transform: translate(-50%, 30px) scale(.75);
+    }
+
+    .core-display.visible {
+        transform: translate(-50%, 0) scale(.75);
+    }
+
+    .log-display {
+        right: 4%;
+        width: 220px;
+    }
+
+    .cost-visual {
+        gap: 12px;
+    }
+
+    .cost-icon {
+        width: 120px;
+        height: 160px;
+    }
+
+    .problem-visual {
+        gap: 5vw;
+    }
+
+    .problem-well {
+        transform: scale(.75);
+    }
+
+    .question-mark {
+        font-size: 65px;
+    }
+
+    .ml-visual {
+        gap: 8px;
+        transform: scale(.75);
+    }
+
+    .ml-card {
+        width: 125px;
+        height: 180px;
+    }
+
+    .facies-popup {
+        padding: 28px 20px;
+    }
+
+    .facies-popup .rock-examples {
+        gap: 9px;
+    }
+
+    .rock-example .rock-name {
+        font-size: 10px;
+    }
+
+    .core-display {
+        width: 430px;
+        transform: translate(-50%, 30px) scale(.72);
+    }
+
+    .core-display.visible {
+        transform: translate(-50%, 0) scale(.72);
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+        animation-duration: .01ms !important;
+        transition-duration: .01ms !important;
+    }
+}
+</style>
+</head>
+
+<body>
+
+<div class="stage" id="stage">
+
+    <section class="visual">
+
+        <div class="opening-glow" id="openingGlow"></div>
+        <div class="drilling-pulse" id="drillingPulse"></div>
+
+        <div class="world surface-view" id="world">
+
+            <div class="sky"></div>
+            <div class="ground"></div>
+
+            <div class="rig" id="rig">
+                <div class="rig-tower"></div>
+                <div class="rig-cross"></div>
+                <div class="rig-base"></div>
+                <div class="drill-line"></div>
+            </div>
+
+            <div class="underground moving" id="underground">
+                <div class="layer one"></div>
+                <div class="layer two"></div>
+                <div class="layer three"></div>
+                <div class="layer four"></div>
+            </div>
+
+            <div class="well"></div>
+            <div class="logging-tool" id="loggingTool"></div>
+
+            <div class="particles">
+                <span class="particle"></span>
+                <span class="particle"></span>
+                <span class="particle"></span>
+                <span class="particle"></span>
+                <span class="particle"></span>
+            </div>
+
+        </div>
+
+        <!-- Facies popup -->
+
+        <div class="facies-popup" id="faciesPopup">
+            <div class="word">FACIES</div>
+
+            <div class="types">
+                Different types of rocks
+            </div>
+
+            <div class="rock-examples">
+                <div class="rock-example">
+                    <div class="rock-sample sandstone"></div>
+                    <div class="rock-name">Sandstone</div>
+                </div>
+
+                <div class="rock-example">
+                    <div class="rock-sample siltstone"></div>
+                    <div class="rock-name">Siltstone</div>
+                </div>
+
+                <div class="rock-example">
+                    <div class="rock-sample shale"></div>
+                    <div class="rock-name">Shale</div>
+                </div>
+
+                <div class="rock-example">
+                    <div class="rock-sample mixed"></div>
+                    <div class="rock-name">Mixed rock</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Core extraction from the well -->
+
+        <div class="core-extraction" id="coreExtraction">
+            <div class="extraction-core"></div>
+        </div>
+
+        <!-- Core sample resting horizontally -->
+
+        <div class="core-display" id="coreDisplay">
+            <div class="core"></div>
+        </div>
+
+        <!-- Well log visual -->
+
+        <div class="log-display" id="logDisplay">
+            <svg class="log-svg" viewBox="0 0 220 300">
+                <g stroke="#718077" stroke-width=".7" opacity=".5">
+                    <path d="M10 10 H210 M10 50 H210 M10 90 H210 M10 130 H210 M10 170 H210 M10 210 H210 M10 250 H210 M10 290 H210"/>
+                    <path d="M10 10 V290 M60 10 V290 M110 10 V290 M160 10 V290 M210 10 V290"/>
+                </g>
+                <path class="log-trace"
+                    d="M18 10 L40 22 L30 35 L80 50 L100 65 L55 80
+                       L60 95 L130 110 L145 125 L100 140 L65 155
+                       L110 170 L150 185 L130 200 L85 215 L115 230
+                       L160 245 L130 260 L170 275 L150 290"/>
+            </svg>
+        </div>
+
+        <!-- Additional log curves -->
+
+        <div class="log-curves" id="logCurves">
+            <svg viewBox="0 0 260 400" preserveAspectRatio="none">
+                <g stroke="#ffffff30" stroke-width="1">
+                    <path d="M0 20 H260 M0 80 H260 M0 140 H260 M0 200 H260 M0 260 H260 M0 320 H260 M0 380 H260"/>
+                    <path d="M40 0 V400 M90 0 V400 M140 0 V400 M190 0 V400 M240 0 V400"/>
+                </g>
+                <path d="M50 0 L70 25 L40 50 L90 75 L120 100 L65 125 L80 150 L130 175 L160 200 L100 225 L75 250 L125 275 L175 300 L135 325 L180 350 L145 375 L160 400"
+                    fill="none" stroke="#e6b66d" stroke-width="3"/>
+                <path d="M120 0 L140 25 L155 50 L130 75 L100 100 L150 125 L175 150 L140 175 L110 200 L160 225 L185 250 L150 275 L120 300 L165 325 L190 350 L150 375 L175 400"
+                    fill="none" stroke="#79c5b2" stroke-width="3"/>
+                <path d="M200 0 L180 25 L210 50 L190 75 L220 100 L185 125 L200 150 L230 175 L190 200 L215 225 L185 250 L220 275 L200 300 L230 325 L190 350 L220 375 L200 400"
+                    fill="none" stroke="#e58b6c" stroke-width="3"/>
+            </svg>
+        </div>
+
+        <!-- Cost visual -->
+
+        <div class="cost-visual" id="costVisual">
+            <div class="cost-icon">
+                <div class="cost-core"></div>
+            </div>
+
+            <div class="cost-lines">
+                <span></span>
+                <span></span>
+                <span></span>
+            </div>
+
+            <div class="cost-icon">
+                <div class="money-symbol">$</div>
+            </div>
+        </div>
+
+        <!-- Main problem visual -->
+
+        <div class="problem-visual" id="problemVisual">
+
+            <div class="problem-well">
+                <div class="shaft"></div>
+                <div class="curves">
+                    <svg viewBox="0 0 100 390" preserveAspectRatio="none">
+                        <path d="M10 0 L40 30 L20 60 L65 90 L80 120 L35 150 L50 180 L80 210 L45 240 L20 270 L55 300 L75 330 L40 360 L60 390"
+                            fill="none" stroke="#e6b66d" stroke-width="3"/>
+                        <path d="M80 0 L60 30 L85 60 L50 90 L25 120 L70 150 L85 180 L50 210 L75 240 L45 270 L65 300 L30 330 L55 360 L25 390"
+                            fill="none" stroke="#79c5b2" stroke-width="3"/>
+                    </svg>
+                </div>
+            </div>
+
+            <div class="question-mark">?</div>
+
+            <div class="problem-core"></div>
+
+        </div>
+
+        <!-- Machine learning visual -->
+
+        <div class="ml-visual" id="mlVisual">
+
+            <div class="ml-card">
+                <div class="ml-rocks">
+                    <span></span><span></span><span></span><span></span>
+                </div>
+            </div>
+
+            <div class="ml-arrow">→</div>
+
+            <div class="ml-card">
+                <div class="ml-logs">
+                    <svg viewBox="0 0 100 130">
+                        <g stroke="#ffffff30" stroke-width="1">
+                            <path d="M0 20 H100 M0 45 H100 M0 70 H100 M0 95 H100 M0 120 H100"/>
+                        </g>
+                        <path d="M10 0 L35 15 L20 30 L65 45 L45 60 L75 75 L50 90 L80 105 L65 120"
+                            fill="none" stroke="#e6b66d" stroke-width="3"/>
+                    </svg>
+                </div>
+            </div>
+
+            <div class="ml-arrow">→</div>
+
+            <div class="ml-card">
+                <div class="ml-brain"></div>
+            </div>
+
+        </div>
+
+    </section>
+
+    <!-- Minimal navigation only -->
+
+    <footer class="controls">
+        <div class="control-buttons">
+            <button onclick="previousScene()" aria-label="Previous slide">←</button>
+            <button onclick="nextScene()" aria-label="Next slide">→</button>
+        </div>
+
+        <div class="progress-area" id="progressArea"></div>
+    </footer>
+
+</div>
+
+<script>
+const scenes = [
+
+    // 1. Opening: drilling into the underground
+    {
+        world: "surface-view",
+        rig: true,
+        extraction: false,
+        core: false,
+        logs: false,
+        popup: false,
+        curves: false,
+        cost: false,
+        problem: false,
+        ml: false,
+        loggingTool: false,
+        opening: true
+    },
+
+    // 2. Facies: the meaning and different rock examples
+    {
+        world: "drilling-view",
+        rig: true,
+        extraction: false,
+        core: false,
+        logs: false,
+        popup: true,
+        curves: false,
+        cost: false,
+        problem: false,
+        ml: false,
+        loggingTool: false,
+        opening: false
+    },
+
+    // 3. Return to the well: popup disappears and the logging tool moves
+    {
+        world: "surface-view",
+        rig: true,
+        extraction: false,
+        core: false,
+        logs: false,
+        popup: false,
+        curves: false,
+        cost: false,
+        problem: false,
+        ml: false,
+        loggingTool: true,
+        opening: false
+    },
+
+    // 4. Core sample extraction and sample resting on the surface
+    {
+        world: "core-view",
+        rig: false,
+        extraction: true,
+        core: true,
+        logs: false,
+        popup: false,
+        curves: false,
+        cost: false,
+        problem: false,
+        ml: false,
+        loggingTool: false,
+        opening: false
+    },
+
+    // 5. Well logs
+    {
+        world: "logs-view",
+        rig: false,
+        extraction: false,
+        core: false,
+        logs: true,
+        popup: false,
+        curves: true,
+        cost: false,
+        problem: false,
+        ml: false,
+        loggingTool: true,
+        opening: false
+    },
+
+    // 6. Cost of collecting core samples
+    {
+        world: "gap-view",
+        rig: false,
+        extraction: false,
+        core: false,
+        logs: false,
+        popup: false,
+        curves: false,
+        cost: true,
+        problem: false,
+        ml: false,
+        loggingTool: false,
+        opening: false
+    },
+
+    // 7. Main problem: logs available, core information missing
+    {
+        world: "gap-view",
+        rig: false,
+        extraction: false,
+        core: false,
+        logs: false,
+        popup: false,
+        curves: false,
+        cost: false,
+        problem: true,
+        ml: false,
+        loggingTool: false,
+        opening: false
+    },
+
+    // 8. Machine learning: the final slide
+    {
+        world: "logs-view",
+        rig: false,
+        extraction: false,
+        core: false,
+        logs: false,
+        popup: false,
+        curves: true,
+        cost: false,
+        problem: false,
+        ml: true,
+        loggingTool: false,
+        opening: false
+    }
+];
+
+let currentScene = 0;
+
+const world = document.getElementById("world");
+const rig = document.getElementById("rig");
+const coreExtraction = document.getElementById("coreExtraction");
+const coreDisplay = document.getElementById("coreDisplay");
+const logDisplay = document.getElementById("logDisplay");
+const faciesPopup = document.getElementById("faciesPopup");
+const logCurves = document.getElementById("logCurves");
+const costVisual = document.getElementById("costVisual");
+const problemVisual = document.getElementById("problemVisual");
+const mlVisual = document.getElementById("mlVisual");
+const loggingTool = document.getElementById("loggingTool");
+const openingGlow = document.getElementById("openingGlow");
+const drillingPulse = document.getElementById("drillingPulse");
+
+function showScene(index) {
+    currentScene = Math.max(0, Math.min(scenes.length - 1, index));
+
+    const scene = scenes[currentScene];
+
+    world.className = "world " + scene.world;
+
+    rig.classList.toggle("hidden", !scene.rig);
+
+    coreExtraction.classList.toggle("visible", scene.extraction);
+    coreDisplay.classList.toggle("visible", scene.core);
+
+    logDisplay.classList.toggle("visible", scene.logs);
+    faciesPopup.classList.toggle("visible", scene.popup);
+    logCurves.classList.toggle("visible", scene.curves);
+    costVisual.classList.toggle("visible", scene.cost);
+    problemVisual.classList.toggle("visible", scene.problem);
+    mlVisual.classList.toggle("visible", scene.ml);
+
+    loggingTool.style.display = scene.loggingTool ? "block" : "none";
+
+    openingGlow.style.display = scene.opening ? "block" : "none";
+    drillingPulse.style.display = scene.opening ? "block" : "none";
+
+    document.querySelectorAll(".progress-dot").forEach((dot, i) => {
+        dot.classList.toggle("active", i <= currentScene);
+    });
+
+    // Restart the core extraction animation when entering slide 4.
+    if (scene.extraction) {
+        const extractionCore = document.querySelector(".extraction-core");
+        extractionCore.style.animation = "none";
+        void extractionCore.getBoundingClientRect();
+        extractionCore.style.animation = "";
+    }
+
+    // Restart the well-log drawing animation when entering slide 5.
+    if (scene.logs) {
+        const trace = document.querySelector(".log-trace");
+        trace.style.animation = "none";
+        void trace.getBoundingClientRect();
+        trace.style.animation = "";
+    }
+}
+
+function nextScene() {
+    if (currentScene === scenes.length - 1) {
+        showScene(0);
+        return;
+    }
+
+    showScene(currentScene + 1);
+}
+
+function previousScene() {
+    if (currentScene === 0) {
+        return;
+    }
+
+    showScene(currentScene - 1);
+}
+
+document.addEventListener("keydown", (event) => {
+    if (event.key === "ArrowRight" || event.key === " ") {
+        event.preventDefault();
+        nextScene();
+    }
+
+    if (event.key === "ArrowLeft") {
+        previousScene();
+    }
+
+    if (event.key.toLowerCase() === "f") {
+        toggleFullscreen();
+    }
+});
+
+async function toggleFullscreen() {
+    try {
+        if (!document.fullscreenElement) {
+            await document.documentElement.requestFullscreen();
+        } else {
+            await document.exitFullscreen();
+        }
+    } catch (error) {
+        // Browser fullscreen can also be activated with F11.
+    }
+}
+
+/* Create progress indicators */
+
+const progressArea = document.getElementById("progressArea");
+
+scenes.forEach(() => {
+    const dot = document.createElement("div");
+    dot.className = "progress-dot";
+    progressArea.appendChild(dot);
+});
+
+/* Start presentation */
+
+showScene(0);
+</script>
+
+</body>
+</html>
